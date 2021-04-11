@@ -8,6 +8,11 @@ import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
+import { UserResolver } from "./resolvers/user";
+import { MyContext } from "./types";
+import redis from "redis";
+import session from "express-session";
+import connectRedis from "connect-redis";
 
 const main = async () => {
     const orm = await MikroORM.init(mikroOrmConfig);
@@ -23,21 +28,46 @@ const main = async () => {
     // console.log(insertedPost);
 
     const app = express();
+    const RedisStore = connectRedis(session as any);
+    const redisClient = redis.createClient();
+
+    app.use(
+        session({
+            name: `qid`,
+            store: new RedisStore({
+                client: redisClient,
+                disableTouch: true,
+                disableTTL: true,
+            }) as any,
+            cookie: {
+                maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
+                httpOnly: true,
+                secure: __prod__, // cookie only works on https
+                sameSite: "lax", // csrf
+            },
+            saveUninitialized: false,
+            secret: "asdasfqascdcds",
+            resave: false,
+        })
+    );
 
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
-            resolvers: [HelloResolver, PostResolver],
+            resolvers: [HelloResolver, PostResolver, UserResolver],
             validate: false,
         }),
-        context: () =>
+        context: ({ req, res }: any): MyContext =>
             // context이며, express의 req, res도 사용 가능
             ({
                 em: orm.em,
+                req,
+                res,
             }),
     });
+
     apolloServer.applyMiddleware({ app });
 
-    app.get("/", (_, res) => {
+    app.get("/", (req, res) => {
         res.send("hello world");
     });
     app.listen(4000, () => {
