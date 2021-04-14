@@ -1,18 +1,18 @@
-import "reflect-metadata";
 import { MikroORM } from "@mikro-orm/core";
+import { ApolloServer } from "apollo-server-express";
+import connectRedis from "connect-redis";
+import cors from "cors";
+import express from "express";
+import session from "express-session";
+import redis from "redis";
+import "reflect-metadata";
+import { buildSchema } from "type-graphql";
 import { __prod__ } from "./constants";
 // import { Post } from "./entities/Post";
 import mikroOrmConfig from "./mikro-orm.config";
-import express from "express";
-import { ApolloServer } from "apollo-server-express";
-import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
-import { MyContext } from "./types";
-import redis from "redis";
-import session from "express-session";
-import connectRedis from "connect-redis";
 
 const main = async () => {
     const orm = await MikroORM.init(mikroOrmConfig);
@@ -30,6 +30,9 @@ const main = async () => {
     const app = express();
     const RedisStore = connectRedis(session as any);
     const redisClient = redis.createClient();
+    app.use(
+        cors({ origin: "http://localhost:3000", credentials: true })
+    );
 
     app.use(
         session({
@@ -56,7 +59,7 @@ const main = async () => {
             resolvers: [HelloResolver, PostResolver, UserResolver],
             validate: false,
         }),
-        context: ({ req, res }: any): MyContext =>
+        context: ({ req, res }) =>
             // context이며, express의 req, res도 사용 가능
             ({
                 em: orm.em,
@@ -65,7 +68,10 @@ const main = async () => {
             }),
     });
 
-    apolloServer.applyMiddleware({ app });
+    apolloServer.applyMiddleware({
+        app,
+        cors: false,
+    });
 
     app.get("/", (_, res) => {
         res.send("hello world");
