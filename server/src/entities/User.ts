@@ -3,25 +3,29 @@ import { Field, ObjectType } from "type-graphql";
 // import { O_NOFOLLOW } from "constants";
 
 @ObjectType()
-@Entity() 
+@Entity()
 export class User {
-  @Field()
-  @PrimaryKey()
-  id!: number;
-  
-  @Field(() => String)
-  @Property({ type: 'date' })
-  createdAt = new Date();
+    @Field()
+    @PrimaryKey()
+    id!: number;
 
-  @Field(() => String)
-  @Property({ type: 'date', onUpdate: () => new Date() })
-  updatedAt = new Date();
+    @Field(() => String)
+    @Property({ type: "date" })
+    createdAt = new Date();
 
-  @Field()  
-  @Property({ type: 'text', unique: true })
-  username!: string;
+    @Field(() => String)
+    @Property({ type: "date", onUpdate: () => new Date() })
+    updatedAt = new Date();
 
-  // @Field()  
-  @Property({ type: 'text' })
-  password!: string;
+    @Field()
+    @Property({ type: "text", unique: true })
+    username!: string;
+
+    @Field()
+    @Property({ type: "text", unique: true })
+    email!: string;
+
+    // @Field()
+    @Property({ type: "text" })
+    password!: string;
 }
