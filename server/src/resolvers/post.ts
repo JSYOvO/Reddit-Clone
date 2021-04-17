@@ -5,8 +5,7 @@ import { Post } from "../entities/Post";
 @Resolver()
 export class PostResolver {
     @Query(() => [Post]) // graphQL타입으로 변환 필요
-    posts(@Ctx() { em }: MyContext): Promise<Post[]> {
-        console.log(em);
+    async posts(@Ctx() { em }: MyContext): Promise<Post[]> {
         return em.find(Post, {});
     }
 
