@@ -10,9 +10,11 @@ import {
     Query,
     Resolver,
 } from "type-graphql";
-import { COOKIE_NAME } from "../constants";
+import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
 import { User } from "../entities/User";
 import { UsernamePasswordInput } from "../utils/UsernamePasswordInput";
+import { sendEmail } from "../utils/sendEmail";
+import { v4 } from "uuid";
 
 @ObjectType()
 class FieldError {
@@ -37,10 +39,29 @@ export class UserResolver {
     @Mutation(() => Boolean)
     async forgotPassword(
         @Arg("email") email: string,
-        @Ctx() { em }: MyContext
+        @Ctx() { em, redis }: MyContext
     ) {
         const user = await em.findOne(User, { email });
-        console.log(user);
+        if (!user) {
+            //the email is not in the DB
+            return false;
+        }
+
+        const token = v4();
+
+        await redis.set(
+            FORGET_PASSWORD_PREFIX + token,
+            user.id,
+            "ex",
+            1000 * 60 * 60 * 24 * 3
+        );
+
+        await sendEmail(
+            email,
+            `<a href="http://localhost:3000/change-password/${token}">reset password</a>`
+        );
+
+        return true;
     }
 
     @Query(() => User, { nullable: true })

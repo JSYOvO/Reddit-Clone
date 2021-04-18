@@ -31,6 +31,8 @@ const type_graphql_1 = require("type-graphql");
 const constants_1 = require("../constants");
 const User_1 = require("../entities/User");
 const UsernamePasswordInput_1 = require("../utils/UsernamePasswordInput");
+const sendEmail_1 = require("../utils/sendEmail");
+const uuid_1 = require("uuid");
 let FieldError = class FieldError {
 };
 __decorate([
@@ -58,10 +60,16 @@ UserResponse = __decorate([
     type_graphql_1.ObjectType()
 ], UserResponse);
 let UserResolver = class UserResolver {
-    forgotPassword(email, { em }) {
+    forgotPassword(email, { em, redis }) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield em.findOne(User_1.User, { email });
-            console.log(user);
+            if (!user) {
+                return false;
+            }
+            const token = uuid_1.v4();
+            yield redis.set(constants_1.FORGET_PASSWORD_PREFIX + token, user.id, "ex", 1000 * 60 * 60 * 24 * 3);
+            yield sendEmail_1.sendEmail(email, `<a href="http://localhost:3000/change-password/${token}">reset password</a>`);
+            return true;
         });
     }
     me({ req, em }) {
