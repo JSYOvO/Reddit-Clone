@@ -3,6 +3,7 @@ import { __prod__ } from "./constants";
 import { MikroORM } from "@mikro-orm/core";
 import path from "path"; // Function built in node
 import { User } from "./entities/User";
+// import { User } from "./entities/User";
 
 export default {
     migrations: {

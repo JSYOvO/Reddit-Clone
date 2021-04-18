@@ -8,7 +8,7 @@ import redis from "redis";
 import "reflect-metadata";
 import { buildSchema } from "type-graphql";
 import { COOKIE_NAME, __prod__ } from "./constants";
-import { User } from "./entities/User";
+// import { User } from "./entities/User";
 // import { Post } from "./entities/Post";
 import mikroOrmConfig from "./mikro-orm.config";
 import { HelloResolver } from "./resolvers/hello";
@@ -17,7 +17,7 @@ import { UserResolver } from "./resolvers/user";
 
 const main = async () => {
     const orm = await MikroORM.init(mikroOrmConfig);
-    await orm.em.nativeDelete(User, {});
+
     await orm.getMigrator().up();
 
     // const post = orm.em.create(Post, { title: "my first post" });
