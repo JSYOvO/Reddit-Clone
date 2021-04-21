@@ -1,24 +1,32 @@
-import { MikroORM } from "@mikro-orm/core";
+import "reflect-metadata";
 import { ApolloServer } from "apollo-server-express";
 import connectRedis from "connect-redis";
 import cors from "cors";
 import express from "express";
 import session from "express-session";
 import Redis from "ioredis";
-import "reflect-metadata";
 import { buildSchema } from "type-graphql";
+import { createConnection } from "typeorm";
 import { COOKIE_NAME, __prod__ } from "./constants";
-// import { User } from "./entities/User";
-// import { Post } from "./entities/Post";
-import mikroOrmConfig from "./mikro-orm.config";
+import { Post } from "./entities/Post";
+import { User } from "./entities/User";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 
 const main = async () => {
-    const orm = await MikroORM.init(mikroOrmConfig);
+    const conn = await createConnection({
+        type: "postgres",
+        database: "lireddit2",
+        username: "jsyovo",
+        password: "jsyovo",
+        logging: true,
+        synchronize: true,
+        entities: [Post, User],
+    });
 
-    await orm.getMigrator().up();
+    // const orm = await MikroORM.init(mikroOrmConfig);
+    // await orm.getMigrator().up();
 
     // const post = orm.em.create(Post, { title: "my first post" });
     // await orm.em.persistAndFlush(post);
@@ -64,7 +72,6 @@ const main = async () => {
         context: ({ req, res }) =>
             // context이며, express의 req, res도 사용 가능
             ({
-                em: orm.em,
                 req,
                 res,
                 redis,
