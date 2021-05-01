@@ -7,10 +7,13 @@ import { InputField } from "../components/InputField";
 import Layout from "../components/Layout";
 import { useCreatePostMutation } from "../generated/graphql";
 import { createUrqlClient } from "../utils/createUrqlClient";
+import { useIsAuth } from "../utils/useIsAuth";
 
 const CreatePost: React.FC<{}> = ({}) => {
     const router = useRouter();
     const [, createPost] = useCreatePostMutation();
+    useIsAuth();
+
     return (
         <Layout variant="small">
             <Formik
@@ -19,11 +22,7 @@ const CreatePost: React.FC<{}> = ({}) => {
                     const { error } = await createPost({
                         input: values,
                     });
-                    if (
-                        error?.message.includes("Not anthenticated")
-                    ) {
-                        router.push("/login");
-                    } else {
+                    if (!error) {
                         router.push("/");
                     }
                 }}
