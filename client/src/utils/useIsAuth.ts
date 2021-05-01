@@ -7,6 +7,7 @@ export const useIsAuth = () => {
     const router = useRouter();
 
     useEffect(() => {
-        if (!fetching && !data?.me) router.push("/login");
+        if (!fetching && !data?.me)
+            router.push("/login?next=" + router.pathname);
     }, [fetching, data, router]);
 };
