@@ -7,6 +7,7 @@ import {
     InputType,
     Int,
     Mutation,
+    ObjectType,
     Query,
     Resolver,
     Root,
@@ -24,6 +25,14 @@ class PostInput {
     text: string;
 }
 
+@ObjectType()
+class PaginatedPosts {
+    @Field(() => [Post])
+    posts: Post[];
+    @Field()
+    hasMore: boolean;
+}
+
 @Resolver(Post)
 export class PostResolver {
     @FieldResolver(() => String)
@@ -31,25 +40,33 @@ export class PostResolver {
         return root.text.slice(0, 50);
     }
 
-    @Query(() => [Post]) // graphQL타입으로 변환 필요
+    @Query(() => PaginatedPosts) // graphQL타입으로 변환 필요
     async posts(
         @Arg("limit", () => Int) limit: number,
         @Arg("cursor", () => String, { nullable: true })
         cursor: string | null
-    ): Promise<Post[]> {
-        console.log(limit, cursor);
+    ): Promise<PaginatedPosts> {
         const realLimit = Math.min(50, limit);
+        const realLimitPlusOne = realLimit + 1;
+
         const queryBuilder = getConnection()
             .getRepository(Post)
             .createQueryBuilder("p")
-            .orderBy('"createdAt"', "DESC")
-            .take(realLimit);
+            .orderBy('p."createdAt"', "DESC")
+            .take(realLimitPlusOne);
+
         if (cursor) {
-            queryBuilder.where('"createdAt" < :cursor', {
+            queryBuilder.where('p."createdAt" < :cursor', {
                 cursor: new Date(parseInt(cursor)),
             });
         }
-        return queryBuilder.getMany();
+
+        const posts = await queryBuilder.getMany();
+
+        return {
+            posts: posts.slice(0, realLimit),
+            hasMore: posts.length === realLimitPlusOne,
+        };
     }
 
     @Query(() => Post, { nullable: true })

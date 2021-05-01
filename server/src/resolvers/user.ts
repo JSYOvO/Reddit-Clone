@@ -186,8 +186,6 @@ export class UserResolver {
                 : { where: { username: usernameOrEmail } }
         );
 
-        console.log(user);
-
         if (!user) {
             return {
                 errors: [
@@ -209,7 +207,6 @@ export class UserResolver {
                 ],
             };
         }
-        console.log(user.id);
         req.session!.userId = user.id;
 
         return { user };
