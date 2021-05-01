@@ -4,11 +4,13 @@ import {
     Ctx,
     Field,
     InputType,
+    Int,
     Mutation,
     Query,
     Resolver,
     UseMiddleware,
 } from "type-graphql";
+import { getConnection } from "typeorm";
 import { Post } from "../entities/Post";
 import { isAuth } from "../middleware/isAuth";
 
@@ -23,8 +25,24 @@ class PostInput {
 @Resolver()
 export class PostResolver {
     @Query(() => [Post]) // graphQL타입으로 변환 필요
-    async posts(): Promise<Post[]> {
-        return Post.find();
+    async posts(
+        @Arg("limit", () => Int) limit: number,
+        @Arg("cursor", () => String, { nullable: true })
+        cursor: string | null
+    ): Promise<Post[]> {
+        console.log(limit, cursor);
+        const realLimit = Math.min(50, limit);
+        const queryBuilder = getConnection()
+            .getRepository(Post)
+            .createQueryBuilder("p")
+            .orderBy('"createdAt"', "DESC")
+            .take(realLimit);
+        if (cursor) {
+            queryBuilder.where('"createdAt" < :cursor', {
+                cursor: new Date(parseInt(cursor)),
+            });
+        }
+        return queryBuilder.getMany();
     }
 
     @Query(() => Post, { nullable: true })
