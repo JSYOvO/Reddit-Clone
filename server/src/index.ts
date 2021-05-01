@@ -24,6 +24,9 @@ const main = async () => {
         synchronize: true,
         entities: [Post, User],
     });
+
+    // await Post.delete({});
+
     console.log(conn);
     // const orm = await MikroORM.init(mikroOrmConfig);
     // await orm.getMigrator().up();

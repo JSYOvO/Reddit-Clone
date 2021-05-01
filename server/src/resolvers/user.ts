@@ -181,11 +181,13 @@ export class UserResolver {
         @Ctx() { req }: MyContext
     ): Promise<UserResponse> {
         const user = await User.findOne(
-            User,
             usernameOrEmail.includes("@")
                 ? { where: { email: usernameOrEmail } }
                 : { where: { username: usernameOrEmail } }
         );
+
+        console.log(user);
+
         if (!user) {
             return {
                 errors: [
